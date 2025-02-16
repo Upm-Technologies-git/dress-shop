@@ -15,5 +15,7 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path('updateitem/', views.updateitem, name='updateitem'),
     path('processOrder/', views.processOrder, name='processOrder'),
-    
+    path('process-payment/', views.process_payment, name='process_payment'),
+    path("order-success/", views.order_success, name="order_success"),
+
 ]

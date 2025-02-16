@@ -1,9 +1,13 @@
+import json
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, login as auth_login
-from .models import Product, ContactUs, Customer, Order, OrderItem, ShippingAddress, Newsletter
+from .models import Product, ContactUs, Customer, Order, OrderItem, ShippingAddress, Newsletter,Order_Status
+from django.utils.crypto import get_random_string
+from datetime import datetime
+
 
 # Create your views here.
 def index(request):
@@ -135,14 +139,14 @@ def updateitem(request):
     return JsonResponse("Item is added", safe=False)
 
 def processOrder(request):
-	transaction_id = datetime.datetime.now().timestamp()
+	transaction_id = datetime.now().timestamp()
 	data = json.loads(request.body)
 
 	if request.user.is_authenticated:
 		customer = request.user.customer
 		order, created = Order.objects.get_or_create(customer=customer, complete=False)
 	else:
-		customer, order = guestOrder(request, data)
+		customer, order = Order(request, data)
 
 	total = float(data['form']['total'])
 	order.transaction_id = transaction_id
@@ -162,3 +166,25 @@ def processOrder(request):
 		)
 
 	return JsonResponse('Payment submitted..', safe=False)
+
+def process_payment(request):
+    if request.method == "POST":
+        payment_method = request.POST.get("payment_method")
+
+        if payment_method == "checkoutPaymentCOD":
+            order = Order_Status.objects.create(
+                user=request.user,  # Assumes a logged-in user
+                order_number=get_random_string(10).upper(),
+                payment_method="Cash on Delivery",
+                status="Pending",
+            )
+            messages.success(request, "Your order has been placed successfully! Pay on delivery.")
+            return redirect("order_success")  # Redirect to order success page
+
+        messages.error(request, "Invalid payment method.")
+        return redirect("checkout_payment")  # Redirect back to payment page
+
+    return redirect("checkout_payment")
+
+def order_success(request):
+    return render(request, "success.html")  

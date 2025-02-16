@@ -91,3 +91,19 @@ class ContactUs(models.Model):
 
     def __str__(self):
         return f'User {self.firstname}'
+
+class Order_Status(models.Model):
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Completed", "Completed"),
+        ("Cancelled", "Cancelled"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order_number = models.CharField(max_length=20, unique=True)
+    payment_method = models.CharField(max_length=50)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def _str_(self):
+        return f"Order {self.order_number} - {self.payment_method}"
